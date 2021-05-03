@@ -1,24 +1,107 @@
 package controllers
 
-import play.api.mvc.{AnyContent, BaseController, ControllerComponents, Request}
+import models.{BonusCardRepository, CartRepository, CustomerRepository, OrderRepository, ProductRepository, TransactionRepository}
+import play.api.data.Form
+import play.api.data.Forms._
+import play.api.libs.json.Json
+import play.api.mvc.{AnyContent, BaseController, ControllerComponents, _}
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
+import scala.util.{Failure, Success}
 
 @Singleton
-class CustomersController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
-  def addCustomer() = Action { implicit request: Request[AnyContent] =>
-    NoContent
+class CustomersController @Inject()(customerRepository: CustomerRepository,
+                                    cartRepository: CartRepository,
+                                    bonusCardRepository: BonusCardRepository,
+                                    orderRepository: OrderRepository,
+                                    transactionRepository: TransactionRepository,
+                                    val controllerComponents: ControllerComponents, productRepository: ProductRepository) extends BaseController {
+
+  val createCustomerForm: Form[CreateCustomerForm] = Form {
+    mapping(
+      "email" -> nonEmptyText,
+      "password" -> nonEmptyText,
+      "firstName" -> nonEmptyText,
+      "lastName" -> nonEmptyText
+    )(CreateCustomerForm.apply)(CreateCustomerForm.unapply)
   }
 
-  def getCustomer(id: Long) = Action {
-    NoContent
+  val modifyCustomerForm: Form[ModifyCustomerForm] = Form {
+    mapping(
+      "email" -> optional(nonEmptyText),
+      "password" -> optional(nonEmptyText),
+      "firstName" -> optional(nonEmptyText),
+      "lastName" -> optional(nonEmptyText)
+    )(ModifyCustomerForm.apply)(ModifyCustomerForm.unapply)
   }
 
-  def modifyCustomer(id: Long) = Action { implicit request: Request[AnyContent] =>
-    NoContent
+  def addCustomer(): Action[AnyContent] = Action.async { implicit request =>
+    createCustomerForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(Json.toJson(error.data)))
+      },
+      customer => {
+        customerRepository.add(customer)
+          .map {
+            case Success(customer) => Ok(Json.toJson(customer))
+            case Failure(exception) => BadRequest(Json.toJson(exception.getMessage))
+          }
+      }
+    )
   }
 
-  def removeCustomer(id: Long) = Action {
-    NoContent
+  def getCustomer(id: Long): Action[AnyContent] = Action.async {
+    customerRepository.get(id).map {
+      case Some(customer) => Ok(Json.toJson(customer))
+      case None => Ok("{\"error\":\"not found\"}")
+    }
+  }
+
+  def getCustomerCart(id: Long): Action[AnyContent] = Action.async {
+    cartRepository.getAllForCustomer(id).map(carts => Ok(Json.toJson(carts)))
+  }
+
+  def getCustomerBonusCards(id: Long): Action[AnyContent] = Action.async {
+    bonusCardRepository.getAllForCustomer(id).map(bonusCards => Ok(Json.toJson(bonusCards)))
+  }
+
+  def getCustomerOrders(id: Long): Action[AnyContent] = Action.async {
+    orderRepository.getAllForCustomer(id).map(orders => Ok(Json.toJson(orders)))
+  }
+
+  def getCustomerTransactions(id: Long): Action[AnyContent] = Action.async {
+    transactionRepository.getAllForCustomer(id).map(transactions => Ok(Json.toJson(transactions)))
+  }
+
+  def getAllCustomers: Action[AnyContent] = Action.async {
+    customerRepository.getAll.map(customers => Ok(Json.toJson(customers)))
+  }
+
+  def modifyCustomer(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    modifyCustomerForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(Json.toJson(error.data)))
+      },
+      customer => {
+        customerRepository.modify(id, customer)
+          .flatMap(result => result.map {
+            case Success(_) => Ok("{\"result\":\"updated\"}")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          })
+      }
+    )
+  }
+
+  def removeCustomer(id: Long): Action[AnyContent] = Action.async {
+    customerRepository.remove(id)
+      .flatMap(result => result.map {
+        case Success(_) => Ok("{\"result\":\"removed\"}")
+        case Failure(exception) => BadRequest(exception.getMessage)
+      })
   }
 }
+
+case class CreateCustomerForm(email: String, password: String, firstName: String, lastName: String)
+case class ModifyCustomerForm(email: Option[String], password: Option[String], firstName: Option[String], lastName: Option[String])
