@@ -1,0 +1,8 @@
+@(categories: Seq[Category])
+
+<p><a href="@controllers.routes.CategoriesController.addCategoryView()">Add new category</a></p>
+<hr/>
+@for(category <- categories) {
+    @views.html.categories.category(category)
+    <hr/>
+}

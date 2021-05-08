@@ -1,0 +1,7 @@
+@(customerBonusCard: CustomerBonusCard)
+
+<p>Customer: @customerBonusCard.customer.firstName @customerBonusCard.customer.lastName</p>
+<p>Number: @customerBonusCard.number</p>
+<p>Status: @customerBonusCard.status</p>
+<a href="@controllers.routes.BonusCardsController.modifyBonusCardView(customerBonusCard.id)">Modify</a>
+<a href="@controllers.routes.BonusCardsController.removeBonusCardView(customerBonusCard.id)">Remove</a>

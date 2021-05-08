@@ -1,0 +1,13 @@
+@(transaction: Form[CreateTransactionForm])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.TransactionsController.addTransactionViewResponse()) {
+    @helper.CSRF.formField
+    @inputText(transaction("orderId"))
+    <div class="buttons">
+        <input type="submit" value="Add Transaction"/>
+    </div>
+}

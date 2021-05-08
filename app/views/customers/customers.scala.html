@@ -1,0 +1,8 @@
+@(customers: Seq[Customer])
+
+<p><a href="@controllers.routes.CustomersController.addCustomerView()">Add new customer</a></p>
+<hr/>
+    @for(customer <- customers) {
+        @views.html.customers.customer(customer)
+        <hr/>
+    }

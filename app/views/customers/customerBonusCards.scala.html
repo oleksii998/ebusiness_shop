@@ -1,0 +1,8 @@
+@(customerBonusCards: Seq[CustomerBonusCard])
+<hr/>
+@for(customerBonusCard <- customerBonusCards) {
+    <p>Customer: @customerBonusCard.customer.firstName @customerBonusCard.customer.lastName</p>
+    <p>Number: @customerBonusCard.number</p>
+    <p>Status: @customerBonusCard.status</p>
+    <hr/>
+}

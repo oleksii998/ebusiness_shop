@@ -1,6 +1,6 @@
 package controllers
 
-import models.ProductRepository
+import models.{CategoryRepository, ProductRepository}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.format.Formats.doubleFormat
@@ -8,12 +8,14 @@ import play.api.libs.json.Json
 import play.api.mvc.{AnyContent, BaseController, ControllerComponents, _}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 @Singleton
-class ProductsController @Inject()(val controllerComponents: ControllerComponents, productRepository: ProductRepository) extends BaseController {
+class ProductsController @Inject()(productRepository: ProductRepository,
+                                   categoryRepository: CategoryRepository,
+                                   cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
 
   val createProductForm: Form[CreateProductForm] = Form {
     mapping(
@@ -98,8 +100,78 @@ class ProductsController @Inject()(val controllerComponents: ControllerComponent
         case Failure(exception) => BadRequest(exception.getMessage)
       })
   }
+
+  //VIEWS
+
+  def addProductView(): Action[AnyContent] = Action.async { implicit request: MessagesRequest[AnyContent] =>
+    categoryRepository.getAll.map(category => Ok(views.html.products.productAdd(createProductForm, category)))
+  }
+
+  def addProductViewResponse(): Action[AnyContent] = Action.async { implicit request =>
+    createProductForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      product => {
+        productRepository.add(product)
+          .map {
+            case Success(_) => Redirect(routes.UsersController.addUserView()).flashing("success" -> "Product added")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          }
+      }
+    )
+  }
+
+  def getProductView(id: Long): Action[AnyContent] = Action.async {
+    productRepository.get(id).map {
+      case Some(product) => Ok(views.html.products.product(product))
+      case None => BadRequest("Product not found")
+    }
+  }
+
+  def getAllProductsView: Action[AnyContent] = Action.async {
+    productRepository.getAll.map(products => Ok(views.html.products.products(products)))
+  }
+
+  def modifyProductView(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    productRepository.get(id).map {
+      case Some(productCategory) =>
+        val categories = Await.result(categoryRepository.getAll, Duration.Inf)
+        val filled = modifyProductForm.fill(ModifyProductForm(Option.apply(productCategory.product.name),
+          Option.apply(productCategory.product.description),
+          Option.apply(productCategory.product.price),
+          Option.apply(productCategory.product.quantity),
+          Option.apply(productCategory.product.categoryId)))
+        Ok(views.html.products.productModify(filled, productCategory.product.id, categories))
+      case None => BadRequest("Product not found")
+    }
+  }
+
+  def modifyProductViewResponse(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    modifyProductForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      user => {
+        productRepository.modify(id, user)
+          .flatMap(result => result.map {
+            case Success(_) => Redirect(routes.ProductsController.modifyProductView(id)).flashing("success" -> "Product updated")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          })
+      }
+    )
+  }
+
+  def removeProductView(id: Long): Action[AnyContent] = Action.async {
+    productRepository.remove(id)
+      .flatMap(result => result.map {
+        case Success(_) => Redirect("/productsView")
+        case Failure(exception) => BadRequest(exception.getMessage)
+      })
+  }
 }
 
 case class CreateProductForm(name: String, description: String, price: Double, quantity: Int, categoryId: Long)
+
 case class ModifyProductForm(name: Option[String], description: Option[String], price: Option[Double], quantity: Option[Int], categoryId: Option[Long])
 

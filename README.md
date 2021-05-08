@@ -1,5 +1,9 @@
 # Online shop
 
+08.05.2021
+- Added cors configuration
+- Added views and corresponding endpoints
+
 03.05.2021
 - Added models and implemented controllers (REST methods only)
 

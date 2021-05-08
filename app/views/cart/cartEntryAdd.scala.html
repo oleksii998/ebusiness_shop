@@ -1,0 +1,27 @@
+@(cartEntry: Form[CreateCartEntryForm], customers: Seq[Customer], products: Seq[Product])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.CartEntriesController.addCartEntryViewResponse()) {
+    @helper.CSRF.formField
+    <p>customer
+    <select name="customerId" id="customerId">
+    @for(customer <- customers) {
+        <option value="@customer.id">@customer.firstName @customer.lastName</option>
+    }
+    </select>
+    </p>
+    <p>product
+    <select name="productId" id="productId">
+    @for(product <- products) {
+        <option value="@product.id">@product.name</option>
+    }
+    </select>
+    </p>
+    @inputText(cartEntry("quantity"))
+    <div class="buttons">
+        <input type="submit" value="Add Cart Entry"/>
+    </div>
+}

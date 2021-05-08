@@ -1,0 +1,8 @@
+@(promotions: Seq[ProductPromotion])
+
+<p><a href="@controllers.routes.PromotionsController.addPromotionView()">Add new promotion</a></p>
+<hr/>
+@for(promotion <- promotions) {
+    @views.html.promotions.promotion(promotion)
+    <hr/>
+}

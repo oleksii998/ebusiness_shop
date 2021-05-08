@@ -1,0 +1,10 @@
+@(orders: Seq[Order])
+<hr/>
+@for(order <- orders) {
+    <p>Id: @order.id</p>
+    <p>Voucher discount: @order.voucherDiscount</p>
+    <p>Promotions discount: @order.promotionsDiscount</p>
+    <p>Price: @order.price</p>
+    <p>Status: @order.status</p>
+    <hr/>
+}

@@ -1,0 +1,8 @@
+@(products: Seq[ProductCategory])
+
+<p><a href="@controllers.routes.ProductsController.addProductView()">Add new product</a></p>
+<hr/>
+@for(product <- products) {
+    @views.html.products.product(product)
+    <hr/>
+}

@@ -1,0 +1,18 @@
+@(productPromotion: ProductPromotion)
+
+<p>Id: @productPromotion.promotion.id</p>
+<p>Product:<br/>
+    <span>&nbsp&nbsp&nbsp&nbspName: @productPromotion.product.name</span><br/>
+    <span>&nbsp&nbsp&nbsp&nbspDescription: @productPromotion.product.description</span><br/>
+    <span>&nbsp&nbsp&nbsp&nbspPrice per 1: @productPromotion.product.price</span>
+</p>
+<p>Type:
+    @if(productPromotion.promotion.promotionType.equals(0)) {
+        Percentage
+    } else {
+        Constant
+    }
+    </p>
+<p>Discount: @productPromotion.promotion.discount</p>
+<a href="@controllers.routes.PromotionsController.modifyPromotionView(productPromotion.promotion.id)">Modify</a>
+<a href="@controllers.routes.PromotionsController.removePromotionView(productPromotion.promotion.id)">Remove</a>

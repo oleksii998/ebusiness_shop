@@ -1,0 +1,8 @@
+@(transactions: Seq[Transaction])
+
+    <p><a href="@controllers.routes.TransactionsController.addTransactionView()">Add new transaction</a></p>
+<hr/>
+    @for(transaction <- transactions) {
+        @views.html.transactions.transaction(transaction)
+        <hr/>
+    }

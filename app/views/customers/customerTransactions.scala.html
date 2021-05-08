@@ -1,0 +1,14 @@
+@(transactions: Seq[Transaction])
+<hr/>
+@for(transaction <- transactions) {
+    <p>Id: @transaction.id</p>
+    <p>Order id: @transaction.orderId</p>
+    <p>Final price: @transaction.finalPrice</p>
+    <p>Status:
+        @if(transaction.status.equals(0)) {
+            Completed
+        } else {
+            Failed
+        }</p>
+    <hr/>
+}

@@ -1,0 +1,12 @@
+@(customerCartEntry: CustomerCartEntry)
+
+<p>Customer: @customerCartEntry.customer.firstName @customerCartEntry.customer.lastName</p>
+<p>Product:<br/>
+    <span>&nbsp&nbsp&nbsp&nbspName: @customerCartEntry.product.name</span><br/>
+    <span>&nbsp&nbsp&nbsp&nbspDescription: @customerCartEntry.product.description</span><br/>
+    <span>&nbsp&nbsp&nbsp&nbspCategory: @customerCartEntry.categoryName</span><br/>
+    <span>&nbsp&nbsp&nbsp&nbspPrice per 1: @customerCartEntry.product.price</span>
+</p>
+<p>Quantity: @customerCartEntry.quantity</p>
+<a href="@controllers.routes.CartEntriesController.modifyCartEntryView(customerCartEntry.id)">Modify</a>
+<a href="@controllers.routes.CartEntriesController.removeCartEntryView(customerCartEntry.id)">Remove</a>

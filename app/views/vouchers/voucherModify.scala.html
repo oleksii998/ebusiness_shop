@@ -1,0 +1,25 @@
+@(voucher: Form[ModifyVoucherForm], id: Long)(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.VouchersController.modifyVoucherViewResponse(id)) {
+    @helper.CSRF.formField
+    @inputText(voucher("name"))
+    @inputText(voucher("discount"))
+    <p>voucherType
+    <select name="type" id="type">
+        @if(PromotionType.PERCENTAGE.toString.equals(voucher("type").value.orNull)) {
+            <option value="0" selected>Percentage</option>
+            <option value="1">Constant</option>
+        } else {
+            <option value="0">Percentage</option>
+            <option value="1" selected>Constant</option>
+        }
+    </select>
+    </p>
+    <div class="buttons">
+        <input type="submit" value="Modify voucher"/>
+    </div>
+}

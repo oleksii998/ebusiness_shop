@@ -1,0 +1,8 @@
+@(customerBonusCards: Seq[CustomerBonusCard])
+
+<p><a href="@controllers.routes.BonusCardsController.addBonusCardView()">Add new bonus card</a></p>
+<hr/>
+@for(customerBonusCard <- customerBonusCards) {
+    @views.html.bonusCards.bonusCard(customerBonusCard)
+    <hr/>
+}

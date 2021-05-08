@@ -1,0 +1,26 @@
+@(product: Form[ModifyProductForm], id: Long, categories: Seq[Category])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+@flash.get("success").getOrElse("")
+
+@form(routes.ProductsController.modifyProductViewResponse(id)) {
+    @helper.CSRF.formField
+    @inputText(product("name"))
+    @inputText(product("description"))
+    @inputText(product("price"))
+    @inputText(product("quantity"))
+    <p>category
+        <select name="categoryId" id="categoryId">
+        @for(category <- categories) {
+            @if(product.value.get.categoryId.get.equals(category.id)) {
+                <option value="@category.id" selected>@category.name</option>
+            } else {
+                <option value="@category.id">@category.name</option>
+            }
+        }
+        </select>
+    </p>
+    <div class="buttons">
+        <input type="submit" value="Modify voucher"/>
+    </div>
+}

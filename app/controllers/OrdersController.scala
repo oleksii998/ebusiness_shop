@@ -1,19 +1,22 @@
 package controllers
 
-import models.{OrderRepository, OrderStatus}
 import models.OrderStatus.OrderStatus
+import models.{CustomerRepository, OrderRepository, OrderStatus, VoucherRepository}
 import play.api.data.Form
 import play.api.data.Forms.{longNumber, mapping, nonEmptyText, optional}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton
-class OrdersController @Inject()(orderRepository: OrderRepository, val controllerComponents: ControllerComponents) extends BaseController {
+class OrdersController @Inject()(orderRepository: OrderRepository,
+                                 customerRepository: CustomerRepository,
+                                 voucherRepository: VoucherRepository,
+                                 cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
 
   val createOrderForm: Form[CreateOrderForm] = Form {
     mapping(
@@ -28,7 +31,7 @@ class OrdersController @Inject()(orderRepository: OrderRepository, val controlle
         status.equals(OrderStatus.PLACED) ||
           status.equals(OrderStatus.BEING_MODIFIED) ||
           status.equals(OrderStatus.DELIVERED)),
-    "voucherId" -> optional(longNumber)
+      "voucherId" -> optional(longNumber)
     )(ModifyOrderForm.apply)(ModifyOrderForm.unapply)
   }
 
@@ -83,7 +86,77 @@ class OrdersController @Inject()(orderRepository: OrderRepository, val controlle
         case Failure(exception) => BadRequest(exception.getMessage)
       })
   }
+
+  //VIEWS
+
+  def addOrderView(): Action[AnyContent] = Action.async { implicit request: MessagesRequest[AnyContent] =>
+    customerRepository.getAll.map(customers =>
+      Await.result(voucherRepository.getAll.map(vouchers =>
+        Ok(views.html.orders.orderAdd(createOrderForm, customers, vouchers))
+      ), Duration.Inf))
+  }
+
+  def addOrderViewResponse(): Action[AnyContent] = Action.async { implicit request =>
+    createOrderForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      order => {
+        orderRepository.add(order)
+          .flatMap(result => result.map {
+            case Success(_) => Redirect(routes.OrdersController.addOrderView()).flashing("success" -> "Order added")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          })
+      }
+    )
+  }
+
+  def getOrderView(id: Long): Action[AnyContent] = Action.async {
+    orderRepository.get(id).map {
+      case Some(user) => Ok(views.html.orders.order(user))
+      case None => BadRequest("Order not found")
+    }
+  }
+
+  def getAllOrdersView: Action[AnyContent] = Action.async {
+    orderRepository.getAll.map(orders => Ok(views.html.orders.orders(orders)))
+  }
+
+  def modifyOrderView(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    orderRepository.get(id).map {
+      case Some(order) =>
+        val filled = modifyOrderForm.fill(ModifyOrderForm(order.status,
+          Option.empty))
+        val vouchers = Await.result(voucherRepository.getAll, Duration.Inf)
+        Ok(views.html.orders.orderModify(filled, order.id, vouchers))
+      case None => BadRequest("Order not found")
+    }
+  }
+
+  def modifyOrderViewResponse(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    modifyOrderForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      order => {
+        orderRepository.modify(id, order)
+          .flatMap(result => result.flatMap(result2 => result2.map {
+            case Success(_) => Redirect(routes.OrdersController.modifyOrderView(id)).flashing("success" -> "Order updated")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          }))
+      }
+    )
+  }
+
+  def removeOrderView(id: Long): Action[AnyContent] = Action.async {
+    orderRepository.remove(id)
+      .flatMap(result => result.map {
+        case Success(_) => Redirect("/ordersView")
+        case Failure(exception) => BadRequest(exception.getMessage)
+      })
+  }
 }
 
 case class CreateOrderForm(customerId: Long, voucherId: Option[Long])
+
 case class ModifyOrderForm(status: OrderStatus, voucherId: Option[Long])

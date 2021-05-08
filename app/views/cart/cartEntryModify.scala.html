@@ -1,0 +1,13 @@
+@(customerCartEntry: Form[ModifyCartEntryForm], id: Long)(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.CartEntriesController.modifyCartEntryViewResponse(id)) {
+    @helper.CSRF.formField
+    @inputText(customerCartEntry("quantity"))
+    <div class="buttons">
+        <input type="submit" value="Modify Cart Entry"/>
+    </div>
+}

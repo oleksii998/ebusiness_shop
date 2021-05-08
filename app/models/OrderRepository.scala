@@ -87,8 +87,8 @@ class OrderRepository @Inject()(voucherRepository: VoucherRepository, databaseCo
         if (order.status.equals(OrderStatus.DELIVERED)) {
           Future.successful(Future.successful(Failure(new RuntimeException("Cannot modify already delivered order"))))
         } else {
-          if (modifyOrderForm.status.equals(OrderStatus.PLACED)) {
-            if (order.status.equals(OrderStatus.BEING_MODIFIED)) {
+          if (modifyOrderForm.status.equals(OrderStatus.BEING_MODIFIED) || modifyOrderForm.status.equals(OrderStatus.PLACED)) {
+            if (modifyOrderForm.status.equals(OrderStatus.BEING_MODIFIED) || order.status.equals(OrderStatus.BEING_MODIFIED)) {
               cartRepository.getAllForCustomer(order.customerId).map(cartEntries => {
                 val price = cartEntries.map(cartEntry => cartEntry.product.price * cartEntry.quantity).sum
                 val promotionsDiscount = cartEntries.map(cartEntry => {
@@ -125,11 +125,13 @@ class OrderRepository @Inject()(voucherRepository: VoucherRepository, databaseCo
                   case Failure(error) => Failure(error)
                 }
               })
-            } else {
+            } else if(order.status.equals(OrderStatus.BEING_MODIFIED)) {
               Future.successful(Future.successful(Failure(new RuntimeException("Cannot modify already delivered order"))))
+            } else {
+              Future.successful(Future.successful(Failure(new RuntimeException("Order is not in modifiable state"))))
             }
           } else if(modifyOrderForm.voucherId.isDefined) {
-            Future.successful(Future.successful(Failure(new RuntimeException("Order is not in modifiable state: voucher cannot be modified"))))
+            Future.successful(Future.successful(Failure(new RuntimeException("Order is not in modifiable state"))))
           } else {
             Future.successful(db.run(orders.filter(_.id === id).update(order.copy(status = modifyOrderForm.status)).asTry))
           }

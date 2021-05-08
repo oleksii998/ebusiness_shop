@@ -1,0 +1,8 @@
+@(orders: Seq[Order])
+
+<p><a href="@controllers.routes.OrdersController.addOrderView()">Add new order</a></p>
+<hr/>
+@for(order <- orders) {
+    @views.html.orders.order(order)
+    <hr/>
+}

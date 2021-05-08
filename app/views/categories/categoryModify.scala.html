@@ -1,0 +1,15 @@
+@(category: Form[ModifyCategoryForm], id: Long)(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.CategoriesController.modifyCategoryViewResponse(id)) {
+    @helper.CSRF.formField
+    @inputText(category("name"))
+    @inputText(category("description"))
+
+    <div class="buttons">
+        <input type="submit" value="Modify category"/>
+    </div>
+}

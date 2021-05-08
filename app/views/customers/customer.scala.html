@@ -1,0 +1,12 @@
+@(customer: Customer)
+
+<p>Email: @customer.email</p>
+<p>First Name: @customer.firstName</p>
+<p>Last Name: @customer.lastName</p>
+<a href="@controllers.routes.CustomersController.modifyCustomerView(customer.id)">Modify</a>
+<a href="@controllers.routes.CustomersController.removeCustomerView(customer.id)">Remove</a>
+<br/>
+<a href="@controllers.routes.CustomersController.getCustomerCartView(customer.id)">Show Cart</a>
+<a href="@controllers.routes.CustomersController.getCustomerBonusCardsView(customer.id)">Show Bonus Cards</a>
+<a href="@controllers.routes.CustomersController.getCustomerOrdersView(customer.id)">Show Orders</a>
+<a href="@controllers.routes.CustomersController.getCustomerTransactionsView(customer.id)">Show Transactions</a>

@@ -1,7 +1,9 @@
 package models
 
 import controllers.{CreateProductForm, ModifyProductForm}
+import models.BonusCardStatus.BonusCardStatus
 import play.api.db.slick.DatabaseConfigProvider
+import play.api.libs.json.{Json, OFormat}
 import slick.jdbc.JdbcProfile
 import slick.lifted.TableQuery
 
@@ -13,6 +15,7 @@ import scala.util.{Failure, Try}
 class ProductRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext) {
   private val databaseConfig = databaseConfigProvider.get[JdbcProfile]
   private val products = TableQuery[ProductTable]
+  private val categories = TableQuery[CategoryTable]
 
   import databaseConfig._
   import databaseConfig.profile.api._
@@ -28,16 +31,31 @@ class ProductRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider
       active = true)).asTry
   }
 
-  def getAll: Future[Seq[Product]] = db.run {
-    products.filter(_.active).result
+  def getAll: Future[Seq[ProductCategory]] = db.run {
+    (for {
+      (productData, categoryData) <- products.filter(_.active)
+        .join(categories).on(_.categoryId === _.id)
+    } yield(productData, categoryData)).result.map(entries => {
+      var seq = Seq[ProductCategory]()
+      for (entry <- entries) {
+        seq :+= ProductCategory(entry._1, entry._2)
+      }
+      seq
+    })
   }
 
-  def get(id: Long): Future[Option[Product]] = db.run {
-    products.filter(product => product.id === id && product.active).result.headOption
+  def get(id: Long): Future[Option[ProductCategory]] = db.run {
+    (for {
+      (productData, categoryData) <- products.filter(product => product.id === id && product.active)
+        .join(categories).on(_.categoryId === _.id)
+    } yield(productData, categoryData)).result.headOption.map {
+      case Some(entry) => Option.apply(ProductCategory(entry._1, entry._2))
+      case None => Option.empty
+    }
   }
 
   def remove(id: Long): Future[Future[Try[Int]]] = {
-    get(id).map {
+    db.run(products.filter(product => product.id === id && product.active).result.headOption).map {
       case Some(product) =>
         val replacement = product.copy(active = false)
         db.run(products.filter(_.id === id).update(replacement).asTry)
@@ -47,7 +65,7 @@ class ProductRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider
   }
 
   def modify(id: Long, modifyProductForm: ModifyProductForm): Future[Future[Try[Int]]] = {
-    get(id).map {
+    db.run(products.filter(product => product.id === id && product.active).result.headOption).map {
       case Some(product) =>
         var name = product.name
         if (modifyProductForm.name.isDefined) {
@@ -75,4 +93,10 @@ class ProductRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider
         Future.successful(Failure(new RuntimeException("Product not found")))
     }
   }
+}
+
+case class ProductCategory(product: Product, category: Category)
+
+object ProductCategory {
+  implicit val productCategoryFormat: OFormat[ProductCategory] = Json.format[ProductCategory]
 }

@@ -1,0 +1,30 @@
+@(promotion: Form[ModifyPromotionForm], id: Long, products: Seq[Product])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+@flash.get("success").getOrElse("")
+
+@form(routes.PromotionsController.modifyPromotionViewResponse(id)) {
+    @helper.CSRF.formField
+    @inputText(promotion("discount"))
+    <p>Product
+        <select name="productId" id="productId">
+        @for(product <- products) {
+            <option value="@product.id">@product.name</option>
+        }
+        </select>
+    </p>
+    <p>promotionType
+        <select name="type" id="type">
+        @if(PromotionType.PERCENTAGE.toString.equals(promotion("type").value.orNull)) {
+            <option value="0" selected>Percentage</option>
+            <option value="1">Constant</option>
+        } else {
+            <option value="0">Percentage</option>
+            <option value="1" selected>Constant</option>
+        }
+        </select>
+    </p>
+    <div class="buttons">
+        <input type="submit" value="Modify voucher"/>
+    </div>
+}

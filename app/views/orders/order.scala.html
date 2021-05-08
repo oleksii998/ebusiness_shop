@@ -1,0 +1,9 @@
+@(order: Order)
+
+<p>Id: @order.id</p>
+<p>Voucher discount: @order.voucherDiscount</p>
+<p>Promotions discount: @order.promotionsDiscount</p>
+<p>Price: @order.price</p>
+<p>Status: @order.status</p>
+<a href="@controllers.routes.OrdersController.modifyOrderView(order.id)">Modify</a>
+<a href="@controllers.routes.OrdersController.removeOrderView(order.id)">Remove</a>

@@ -1,0 +1,27 @@
+@(bonusCard: Form[CreateBonusCardForm], customers: Seq[Customer])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.BonusCardsController.addBonusCardViewResponse()) {
+    @helper.CSRF.formField
+    <p>customer
+    <select name="customerId" id="customerId">
+    @for(customer <- customers) {
+        <option value="@customer.id">@customer.firstName @customer.lastName</option>
+    }
+    </select>
+    </p>
+    @inputText(bonusCard("number"))
+    <p>status
+    <select name="status" id="status">
+            <option value="Active">Active</option>
+            <option value="Blocked">Blocked</option>
+            <option value="Closed">Closed</option>
+    </select>
+    </p>
+    <div class="buttons">
+        <input type="submit" value="Add Bonus Card"/>
+    </div>
+}

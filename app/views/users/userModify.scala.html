@@ -1,0 +1,17 @@
+@(user: Form[ModifyUserForm], id: Long)(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.UsersController.modifyUserViewResponse(id)) {
+    @helper.CSRF.formField
+    @inputText(user("email"))
+    @inputText(user("firstName"))
+    @inputText(user("lastName"))
+    @inputText(user("Password"))
+
+    <div class="buttons">
+        <input type="submit" value="Modify user"/>
+    </div>
+}

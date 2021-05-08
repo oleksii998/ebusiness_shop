@@ -1,0 +1,10 @@
+@(customerCartEntries: Seq[CustomerCartEntry])
+<hr/>
+@for(customerCartEntry <- customerCartEntries) {
+    <p>Name: @customerCartEntry.product.name</p>
+    <p>Description: @customerCartEntry.product.description</p>
+    <p>Category: @customerCartEntry.categoryName</p>
+    <p>Price per 1: @customerCartEntry.product.price</p>
+    <p>Quantity: @customerCartEntry.quantity</p>
+    <hr/>
+}

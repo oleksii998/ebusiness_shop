@@ -1,0 +1,15 @@
+@(category: Form[CreateCategoryForm])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.CategoriesController.addCategoryViewResponse()) {
+    @helper.CSRF.formField
+    @inputText(category("name"))
+    @inputText(category("description"))
+
+    <div class="buttons">
+        <input type="submit" value="Add Category"/>
+    </div>
+}

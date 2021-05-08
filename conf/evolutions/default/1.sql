@@ -24,9 +24,11 @@ create table if not exists Promotions
 create table if not exists Vouchers
 (
     "id"          integer not null primary key autoincrement,
+    "name"        varchar not null,
     "discount"    double  not null,
     "type"        varchar not null,
-    "active"      bool    not null
+    "active"      bool    not null,
+    constraint unique_number unique ("name")
 );
 
 create table if not exists Categories

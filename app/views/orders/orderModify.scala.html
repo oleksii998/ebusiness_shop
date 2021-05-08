@@ -1,0 +1,27 @@
+@(order: Form[ModifyOrderForm], orderId: Long, vouchers: Seq[Voucher])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.OrdersController.modifyOrderViewResponse(orderId)) {
+    @helper.CSRF.formField
+    <p>status
+    <select name="status" id="status">
+        <option value="Placed">Placed</option>
+        <option value="Being modified">Being modified</option>
+        <option value="Delivered">Delivered</option>
+    </select>
+    </p>
+    <p>voucher
+    <select name="voucherId" id="voucherId">
+        <option value="">No</option>
+        @for(voucher <- vouchers) {
+            <option value="@voucher.id">@voucher.name</option>
+        }
+    </select>
+    </p>
+    <div class="buttons">
+        <input type="submit" value="Modify Order"/>
+    </div>
+}

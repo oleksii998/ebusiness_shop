@@ -1,0 +1,13 @@
+@(transaction: Transaction)
+
+<p>Id: @transaction.id</p>
+<p>Order id: @transaction.orderId</p>
+<p>Final price: @transaction.finalPrice</p>
+<p>Status:
+    @if(transaction.status.equals(0)) {
+        Completed
+    } else {
+        Failed
+}</p>
+<a href="@controllers.routes.TransactionsController.modifyTransactionView(transaction.id)">Modify</a>
+<a href="@controllers.routes.TransactionsController.removeTransactionView(transaction.id)">Remove</a>

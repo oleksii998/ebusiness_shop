@@ -1,0 +1,31 @@
+@(bonusCard: Form[ModifyBonusCardForm], id: Long)(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.BonusCardsController.modifyBonusCardViewResponse(id)) {
+    @helper.CSRF.formField
+    <p>status
+    <select name="status" id="status">
+        @if(BonusCardStatus.ACTIVE.equals(bonusCard("status").value.orNull)) {
+            <option selected value="Active">Active</option>
+            <option value="Blocked">Blocked</option>
+            <option value="Closed">Closed</option>
+        }
+        @if(BonusCardStatus.BLOCKED.equals(bonusCard("status").value.orNull)) {
+            <option value="Active">Active</option>
+            <option selected value="Blocked">Blocked</option>
+            <option value="Closed">Closed</option>
+        }
+        @if(BonusCardStatus.CLOSED.equals(bonusCard("status").value.orNull)) {
+            <option value="Active">Active</option>
+            <option value="Blocked">Blocked</option>
+            <option selected value="Closed">Closed</option>
+        }
+    </select>
+    </p>
+    <div class="buttons">
+        <input type="submit" value="Modify Bonus Card"/>
+    </div>
+}

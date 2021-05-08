@@ -1,0 +1,18 @@
+@(transaction: Form[ModifyTransactionForm], id: Long)(implicit request: MessagesRequestHeader, flash: Flash)
+
+@import helper._
+
+@flash.get("success").getOrElse("")
+
+@form(routes.TransactionsController.modifyTransactionViewResponse(id)) {
+    @helper.CSRF.formField
+    <p>Status:
+        @if(transaction.value.get.status.equals(0)) {
+            Completed
+        } else {
+            Failed
+    }</p>
+    <div class="buttons">
+        <input type="submit" value="Modify voucher"/>
+    </div>
+}

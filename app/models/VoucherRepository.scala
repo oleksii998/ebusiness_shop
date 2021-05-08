@@ -20,7 +20,8 @@ class VoucherRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider
   def add(createVoucherForm: CreateVoucherForm): Future[Try[Voucher]] = db.run {
     ((vouchers returning vouchers.map(_.id) into (
       (voucher, id) => voucher.copy(id = id)
-      )) += Voucher(0, createVoucherForm.discount,
+      )) += Voucher(0, createVoucherForm.name,
+      createVoucherForm.discount,
       createVoucherForm.voucherType,
       active = true)).asTry
   }

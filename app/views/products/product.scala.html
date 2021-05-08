@@ -1,0 +1,9 @@
+@(productCategory: ProductCategory)
+
+<p>Id: @productCategory.product.id</p>
+<p>Name: @productCategory.product.name</p>
+<p>Description: @productCategory.product.description</p>
+<p>Price per 1: @productCategory.product.price</p>
+<p>Category: @productCategory.category.name</p>
+<a href="@controllers.routes.ProductsController.modifyProductView(productCategory.product.id)">Modify</a>
+<a href="@controllers.routes.ProductsController.removeProductView(productCategory.product.id)">Remove</a>

@@ -1,0 +1,26 @@
+@(order: Form[CreateOrderForm], customers: Seq[Customer], vouchers: Seq[Voucher])(implicit request: MessagesRequestHeader, flash: Flash)
+
+    @import helper._
+
+    @flash.get("success").getOrElse("")
+
+    @form(routes.OrdersController.addOrderViewResponse()) {
+        @helper.CSRF.formField
+        <p>customer
+            <select name="customerId" id="customerId">
+            @for(customer <- customers) {
+                <option value="@customer.id">@customer.firstName @customer.lastName</option>
+            }
+            </select>
+        </p>
+        <p>voucher
+            <select name="voucherId" id="voucherId">
+            @for(voucher <- vouchers) {
+                <option value="@voucher.id">@voucher.name</option>
+            }
+            </select>
+        </p>
+        <div class="buttons">
+            <input type="submit" value="Add Order"/>
+        </div>
+    }

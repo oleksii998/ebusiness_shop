@@ -1,0 +1,8 @@
+@(customerCartEntries: Seq[CustomerCartEntry])
+
+<p><a href="@controllers.routes.CartEntriesController.addCartEntryView()">Add new cart entry</a></p>
+<hr/>
+@for(customerCartEntry <- customerCartEntries) {
+    @views.html.cart.cartEntry(customerCartEntry)
+    <hr/>
+}

@@ -1,0 +1,8 @@
+@(users: Seq[User])
+
+<p><a href="@controllers.routes.UsersController.addUserView()">Add new user</a></p>
+<hr/>
+@for(user <- users) {
+    @views.html.users.user(user)
+    <hr/>
+}

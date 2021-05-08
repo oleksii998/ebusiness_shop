@@ -1,0 +1,8 @@
+@(vouchers: Seq[Voucher])
+
+<p><a href="@controllers.routes.VouchersController.addVoucherView()">Add new voucher</a></p>
+<hr/>
+@for(voucher <- vouchers) {
+    @views.html.vouchers.voucher(voucher)
+    <hr/>
+}

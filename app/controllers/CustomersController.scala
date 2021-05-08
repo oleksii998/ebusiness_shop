@@ -7,7 +7,6 @@ import play.api.libs.json.Json
 import play.api.mvc.{AnyContent, BaseController, ControllerComponents, _}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.util.{Failure, Success}
 
@@ -17,7 +16,8 @@ class CustomersController @Inject()(customerRepository: CustomerRepository,
                                     bonusCardRepository: BonusCardRepository,
                                     orderRepository: OrderRepository,
                                     transactionRepository: TransactionRepository,
-                                    val controllerComponents: ControllerComponents, productRepository: ProductRepository) extends BaseController {
+                                    cc: MessagesControllerComponents)
+                                   (implicit ec: ExecutionContext) extends MessagesAbstractController(cc) {
 
   val createCustomerForm: Form[CreateCustomerForm] = Form {
     mapping(
@@ -98,6 +98,89 @@ class CustomersController @Inject()(customerRepository: CustomerRepository,
     customerRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")
+        case Failure(exception) => BadRequest(exception.getMessage)
+      })
+  }
+
+  //VIEWS
+
+  def addCustomerView(): Action[AnyContent] = Action { implicit request: MessagesRequest[AnyContent] =>
+    Ok(views.html.customers.customerAdd(createCustomerForm))
+  }
+
+  def addCustomerViewResponse(): Action[AnyContent] = Action.async { implicit request =>
+    createCustomerForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      customer => {
+        customerRepository.add(customer)
+          .map {
+            case Success(customer) => Redirect(routes.CustomersController.addCustomerView()).flashing("success" -> "Customer added")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          }
+      }
+    )
+  }
+
+  def getCustomerView(id: Long): Action[AnyContent] = Action.async {
+    customerRepository.get(id).map {
+      case Some(customer) => Ok(views.html.customers.customer(customer))
+      case None => BadRequest("Customer not found")
+    }
+  }
+
+  def getCustomerCartView(id: Long): Action[AnyContent] = Action.async {
+    cartRepository.getAllForCustomer(id).map(carts => Ok(views.html.customers.customerCart(carts)))
+  }
+
+  def getCustomerBonusCardsView(id: Long): Action[AnyContent] = Action.async {
+    bonusCardRepository.getAllForCustomer(id).map(bonusCards => Ok(views.html.customers.customerBonusCards(bonusCards)))
+  }
+
+  def getCustomerOrdersView(id: Long): Action[AnyContent] = Action.async {
+    orderRepository.getAllForCustomer(id).map(orders => Ok(views.html.customers.customerOrders(orders)))
+  }
+
+  def getCustomerTransactionsView(id: Long): Action[AnyContent] = Action.async {
+    transactionRepository.getAllForCustomer(id).map(transactions => Ok(views.html.customers.customerTransactions(transactions)))
+  }
+
+  def getAllCustomersView: Action[AnyContent] = Action.async {
+    customerRepository.getAll.map( customers => Ok(views.html.customers.customers(customers)))
+  }
+
+  def modifyCustomerView(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    customerRepository.get(id).map {
+      case Some(customer) =>
+        val filled = modifyCustomerForm.fill(ModifyCustomerForm(Option.apply(customer.email),
+          Option.apply(customer.password),
+            Option.apply(customer.firstName),
+              Option.apply(customer.lastName)))
+        Ok(views.html.customers.customerModify(filled, customer.id))
+      case None => BadRequest("Customer not found")
+    }
+  }
+
+  def modifyCustomerViewResponse(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    modifyCustomerForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      customer => {
+        customerRepository.modify(id, customer)
+          .flatMap(result => result.map {
+            case Success(_) => Redirect(routes.CustomersController.modifyCustomerView(id)).flashing("success" -> "Customer updated")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          })
+      }
+    )
+  }
+
+  def removeCustomerView(id: Long): Action[AnyContent] = Action.async {
+    customerRepository.remove(id)
+      .flatMap(result => result.map {
+        case Success(_) => Redirect("/customersView")
         case Failure(exception) => BadRequest(exception.getMessage)
       })
   }

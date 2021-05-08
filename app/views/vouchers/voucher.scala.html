@@ -1,0 +1,13 @@
+@(voucher: Voucher)
+
+<p>Name: @voucher.name</p>
+<p>Type:
+    @if(voucher.voucherType.equals(0)) {
+        Percentage
+    } else {
+        Constant
+    }
+    </p>
+<p>Discount: @voucher.discount</p>
+<a href="@controllers.routes.VouchersController.modifyVoucherView(voucher.id)">Modify</a>
+<a href="@controllers.routes.VouchersController.removeVoucherView(voucher.id)">Remove</a>

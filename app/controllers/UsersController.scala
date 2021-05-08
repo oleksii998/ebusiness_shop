@@ -4,15 +4,15 @@ import models.UserRepository
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText, optional}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents}
+import play.api.mvc._
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton
-class UsersController @Inject()(userRepository: UserRepository, val controllerComponents: ControllerComponents) extends BaseController {
+class UsersController @Inject()(userRepository: UserRepository,
+                                cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
 
   val createUserForm: Form[CreateUserForm] = Form {
     mapping(
@@ -77,6 +77,73 @@ class UsersController @Inject()(userRepository: UserRepository, val controllerCo
     userRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")
+        case Failure(exception) => BadRequest(exception.getMessage)
+      })
+  }
+
+  //VIEWS
+
+  def addUserView(): Action[AnyContent] = Action { implicit request: MessagesRequest[AnyContent] =>
+    Ok(views.html.users.userAdd(createUserForm))
+  }
+
+  def addUserViewResponse(): Action[AnyContent] = Action.async { implicit request =>
+    createUserForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      customer => {
+        userRepository.add(customer)
+          .map {
+            case Success(_) => Redirect(routes.UsersController.addUserView()).flashing("success" -> "User added")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          }
+      }
+    )
+  }
+
+  def getUserView(id: Long): Action[AnyContent] = Action.async {
+    userRepository.get(id).map {
+      case Some(user) => Ok(views.html.users.user(user))
+      case None => BadRequest("User not found")
+    }
+  }
+
+  def getAllUsersView: Action[AnyContent] = Action.async {
+    userRepository.getAll.map(users => Ok(views.html.users.users(users)))
+  }
+
+  def modifyUserView(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    userRepository.get(id).map {
+      case Some(user) =>
+        val filled = modifyUserForm.fill(ModifyUserForm(Option.apply(user.email),
+          Option.apply(user.password),
+          Option.apply(user.firstName),
+          Option.apply(user.lastName)))
+        Ok(views.html.users.userModify(filled, user.id))
+      case None => BadRequest("User not found")
+    }
+  }
+
+  def modifyUserViewResponse(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    modifyUserForm.bindFromRequest.fold(
+      error => {
+        Future.successful(BadRequest(error.data.values.reduce((x, y) => x + "\n" + y)))
+      },
+      user => {
+        userRepository.modify(id, user)
+          .flatMap(result => result.map {
+            case Success(_) => Redirect(routes.UsersController.modifyUserView(id)).flashing("success" -> "User updated")
+            case Failure(exception) => BadRequest(exception.getMessage)
+          })
+      }
+    )
+  }
+
+  def removeUserView(id: Long): Action[AnyContent] = Action.async {
+    userRepository.remove(id)
+      .flatMap(result => result.map {
+        case Success(_) => Redirect("/usersView")
         case Failure(exception) => BadRequest(exception.getMessage)
       })
   }
