@@ -70,7 +70,7 @@ class ProductsController @Inject()(productRepository: ProductRepository,
   def getProduct(id: Long): Action[AnyContent] = Action.async { implicit request =>
     productRepository.get(id).map {
       case Some(product) => Ok(Json.toJson(product))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Product not found\"}")
     }
   }
 

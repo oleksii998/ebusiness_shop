@@ -46,7 +46,7 @@ val createTransactionForm: Form[CreateTransactionForm] = Form {
   def getTransaction(id: Long): Action[AnyContent] = Action.async { implicit request =>
     transactionRepository.get(id).map {
       case Some(transaction) => Ok(Json.toJson(transaction))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Transaction not found\"}")
     }
   }
 

@@ -55,7 +55,7 @@ class CustomersController @Inject()(customerRepository: CustomerRepository,
   def getCustomer(id: Long): Action[AnyContent] = Action.async {
     customerRepository.get(id).map {
       case Some(customer) => Ok(Json.toJson(customer))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"message\":\"Customer not found\"}")
     }
   }
 

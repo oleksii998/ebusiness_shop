@@ -43,7 +43,7 @@ class CartRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider)(i
     } yield (cartEntryData.id, customerData, productData, promotionData, categoryData.name, cartEntryData.quantity)).result.map(cartEntries => {
       var seq = Seq[CustomerCartEntry]()
       for (cartEntry <- cartEntries) {
-        seq :+= CustomerCartEntry(cartEntry._1, cartEntry._2, cartEntry._3, cartEntry._4, cartEntry._5, cartEntry._6)
+        seq :+= CustomerCartEntry(cartEntry._1, Option.apply(cartEntry._2), cartEntry._3, cartEntry._4, cartEntry._5, cartEntry._6)
       }
       seq
     })
@@ -59,7 +59,7 @@ class CartRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider)(i
         .join(categories).on(_._1._2.categoryId === _.id)
         .join(customers).on(_._1._1._1._1.customerId === _.id)
     } yield (cartEntryData.id, customerData, productData, promotionData, categoryData.name, cartEntryData.quantity)).result.headOption.map {
-      case Some(cartEntry) => Option.apply(CustomerCartEntry(cartEntry._1, cartEntry._2, cartEntry._3, cartEntry._4, cartEntry._5, cartEntry._6))
+      case Some(cartEntry) => Option.apply(CustomerCartEntry(cartEntry._1, Option.apply(cartEntry._2), cartEntry._3, cartEntry._4, cartEntry._5, cartEntry._6))
       case None => Option.empty
     }
   }
@@ -70,12 +70,12 @@ class CartRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider)(i
         .joinLeft(orders).on(_.orderId === _.id)
         .filter(result => result._2.isEmpty || result._2.map(_.status) === OrderStatus.BEING_MODIFIED)
         .join(products).on(_._1.productId === _.id)
-        .joinLeft(promotions).on(_._2.id === _.productId)
+        .joinLeft(promotions.filter(_.active)).on(_._2.id === _.productId)
         .join(categories).on(_._1._2.categoryId === _.id)
     } yield (cartEntryData.id, productData, promotionData, categoryData.name, cartEntryData.quantity)).result.map(cartEntries => {
       var seq = Seq[CustomerCartEntry]()
       for (cartEntry <- cartEntries) {
-        seq :+= CustomerCartEntry(cartEntry._1, null, cartEntry._2, cartEntry._3, cartEntry._4, cartEntry._5)
+        seq :+= CustomerCartEntry(cartEntry._1, Option.empty, cartEntry._2, cartEntry._3, cartEntry._4, cartEntry._5)
       }
       seq
     })
@@ -99,7 +99,7 @@ class CartRepository @Inject()(databaseConfigProvider: DatabaseConfigProvider)(i
   }
 }
 
-case class CustomerCartEntry(id: Long, customer: Customer, product: Product, promotion: Option[Promotion], categoryName: String, quantity: Int)
+case class CustomerCartEntry(id: Long, customer: Option[Customer], product: Product, promotion: Option[Promotion], categoryName: String, quantity: Int)
 
 object CustomerCartEntry {
   implicit val customerCartEntryFormat: OFormat[CustomerCartEntry] = Json.format[CustomerCartEntry]

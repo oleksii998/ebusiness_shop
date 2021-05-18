@@ -1,7 +1,7 @@
 package controllers
 
 import models.OrderStatus.OrderStatus
-import models.{CustomerRepository, OrderRepository, OrderStatus, VoucherRepository}
+import models.{CustomerRepository, OrderRepository, OrderStatus, TransactionRepository, VoucherRepository}
 import play.api.data.Form
 import play.api.data.Forms.{longNumber, mapping, nonEmptyText, optional}
 import play.api.libs.json.Json
@@ -16,6 +16,7 @@ import scala.util.{Failure, Success}
 class OrdersController @Inject()(orderRepository: OrderRepository,
                                  customerRepository: CustomerRepository,
                                  voucherRepository: VoucherRepository,
+                                 transactionRepository: TransactionRepository,
                                  cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
 
   val createOrderForm: Form[CreateOrderForm] = Form {
@@ -53,7 +54,7 @@ class OrdersController @Inject()(orderRepository: OrderRepository,
   def getOrder(id: Long): Action[AnyContent] = Action.async {
     orderRepository.get(id).map {
       case Some(product) => Ok(Json.toJson(product))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Order not found\"}")
     }
   }
 

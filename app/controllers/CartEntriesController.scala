@@ -53,7 +53,7 @@ class CartEntriesController @Inject()(cartRepository: CartRepository,
   def getCartEntry(id: Long): Action[AnyContent] = Action.async { implicit request =>
     cartRepository.get(id).map {
       case Some(cart) => Ok(Json.toJson(cart))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"message\":\"Cart entry not found\"}")
     }
   }
 

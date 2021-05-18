@@ -52,7 +52,7 @@ class VouchersController @Inject()(voucherRepository: VoucherRepository, cc: Mes
   def getVoucher(id: Long): Action[AnyContent] = Action.async { implicit request =>
     voucherRepository.get(id).map {
       case Some(voucher) => Ok(Json.toJson(voucher))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Voucher not found\"}")
     }
   }
 

@@ -1,6 +1,6 @@
 @(customerCartEntry: CustomerCartEntry)
 
-<p>Customer: @customerCartEntry.customer.firstName @customerCartEntry.customer.lastName</p>
+<p>Customer: @customerCartEntry.customer.get.firstName @customerCartEntry.customer.get.lastName</p>
 <p>Product:<br/>
     <span>&nbsp&nbsp&nbsp&nbspName: @customerCartEntry.product.name</span><br/>
     <span>&nbsp&nbsp&nbsp&nbspDescription: @customerCartEntry.product.description</span><br/>

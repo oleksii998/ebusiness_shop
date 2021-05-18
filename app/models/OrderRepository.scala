@@ -1,6 +1,6 @@
 package models
 
-import controllers.{CreateOrderForm, ModifyOrderForm}
+import controllers.{CreateOrderForm, CreateTransactionForm, ModifyOrderForm}
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 import slick.lifted.TableQuery

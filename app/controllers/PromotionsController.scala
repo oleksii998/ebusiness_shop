@@ -56,7 +56,7 @@ class PromotionsController @Inject()(promotionRepository: PromotionRepository,
   def getPromotion(id: Long): Action[AnyContent] = Action.async { implicit request =>
     promotionRepository.get(id).map {
       case Some(promotion) => Ok(Json.toJson(promotion))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Promotion not found\"}")
     }
   }
 

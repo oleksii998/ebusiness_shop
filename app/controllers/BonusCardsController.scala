@@ -53,7 +53,7 @@ class BonusCardsController @Inject()(bonusCardRepository: BonusCardRepository,
   def getBonusCard(id: Long): Action[AnyContent] = Action.async {
     bonusCardRepository.get(id).map {
       case Some(product) => Ok(Json.toJson(product))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Bonus card not found\"}")
     }
   }
 

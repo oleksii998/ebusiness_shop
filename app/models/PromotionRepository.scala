@@ -44,7 +44,7 @@ class PromotionRepository @Inject()(databaseConfigProvider: DatabaseConfigProvid
 
   def get(id: Long): Future[Option[ProductPromotion]] = db.run {
     (for {
-      (promotionData, productData) <- promotions.filter(_.active)
+      (promotionData, productData) <- promotions.filter(x => x.id === id && x.active)
         .join(products).on(_.productId === _.id)
     } yield (promotionData, productData)).result.headOption.map {
       case Some(entry) => Option.apply(ProductPromotion(entry._2, entry._1))

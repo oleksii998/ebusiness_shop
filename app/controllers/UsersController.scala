@@ -50,7 +50,7 @@ class UsersController @Inject()(userRepository: UserRepository,
   def getUser(id: Long): Action[AnyContent] = Action.async {
     userRepository.get(id).map {
       case Some(user) => Ok(Json.toJson(user))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"message\": \"User not found\"}")
     }
   }
 

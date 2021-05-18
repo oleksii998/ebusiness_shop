@@ -45,7 +45,7 @@ class CategoriesController @Inject()(categoryRepository: CategoryRepository, cc:
   def getCategory(id: Long): Action[AnyContent] = Action.async {
     categoryRepository.get(id).map {
       case Some(product) => Ok(Json.toJson(product))
-      case None => Ok("{\"error\":\"not found\"}")
+      case None => NotFound("{\"error\":\"Category not found\"}")
     }
   }
 
