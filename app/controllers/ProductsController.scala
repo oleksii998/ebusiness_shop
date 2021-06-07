@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
 @Singleton
 class ProductsController @Inject()(productRepository: ProductRepository,
                                    categoryRepository: CategoryRepository,
-                                   cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                   scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createProductForm: Form[CreateProductForm] = Form {
     mapping(
@@ -37,22 +37,7 @@ class ProductsController @Inject()(productRepository: ProductRepository,
     )(ModifyProductForm.apply)(ModifyProductForm.unapply)
   }
 
-  def addProduct(): Action[AnyContent] = Action.async { implicit request =>
-    createProductForm.bindFromRequest.fold(
-      error => {
-        Future.successful(BadRequest(Json.toJson(error.data)))
-      },
-      product => {
-        productRepository.add(product)
-          .map {
-            case Success(product) => Ok(Json.toJson(product))
-            case Failure(exception) => BadRequest(Json.toJson(exception.getMessage))
-          }
-      }
-    )
-  }
-
-  def addProductAndRender(): Action[AnyContent] = Action.async { implicit request =>
+  def addProduct(): Action[AnyContent] = securedAction.async { implicit request =>
     createProductForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -78,7 +63,7 @@ class ProductsController @Inject()(productRepository: ProductRepository,
     productRepository.getAll.map(products => Ok(Json.toJson(products)))
   }
 
-  def modifyProduct(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyProduct(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyProductForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -93,7 +78,7 @@ class ProductsController @Inject()(productRepository: ProductRepository,
     )
   }
 
-  def removeProduct(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def removeProduct(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     productRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

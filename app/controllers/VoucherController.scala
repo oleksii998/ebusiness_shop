@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton
-class VouchersController @Inject()(voucherRepository: VoucherRepository, cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+class VouchersController @Inject()(voucherRepository: VoucherRepository, scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
   val createVoucherForm: Form[CreateVoucherForm] = Form {
     mapping(
       "discount" -> of[Double],
@@ -34,7 +34,7 @@ class VouchersController @Inject()(voucherRepository: VoucherRepository, cc: Mes
     )(ModifyVoucherForm.apply)(ModifyVoucherForm.unapply)
   }
 
-  def addVoucher(): Action[AnyContent] = Action.async { implicit request =>
+  def addVoucher(): Action[AnyContent] = securedAction.async { implicit request =>
     createVoucherForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -60,7 +60,7 @@ class VouchersController @Inject()(voucherRepository: VoucherRepository, cc: Mes
     voucherRepository.getAll.map(vouchers => Ok(Json.toJson(vouchers)))
   }
 
-  def modifyVoucher(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyVoucher(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyVoucherForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -75,7 +75,7 @@ class VouchersController @Inject()(voucherRepository: VoucherRepository, cc: Mes
     )
   }
 
-  def removeVoucher(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def removeVoucher(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     voucherRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

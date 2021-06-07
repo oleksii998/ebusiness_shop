@@ -17,7 +17,7 @@ class OrdersController @Inject()(orderRepository: OrderRepository,
                                  customerRepository: CustomerRepository,
                                  voucherRepository: VoucherRepository,
                                  transactionRepository: TransactionRepository,
-                                 cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                 scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createOrderForm: Form[CreateOrderForm] = Form {
     mapping(
@@ -36,7 +36,7 @@ class OrdersController @Inject()(orderRepository: OrderRepository,
     )(ModifyOrderForm.apply)(ModifyOrderForm.unapply)
   }
 
-  def addOrder(): Action[AnyContent] = Action.async { implicit request =>
+  def addOrder(): Action[AnyContent] = securedAction.async { implicit request =>
     createOrderForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -51,18 +51,18 @@ class OrdersController @Inject()(orderRepository: OrderRepository,
     )
   }
 
-  def getOrder(id: Long): Action[AnyContent] = Action.async {
+  def getOrder(id: Long): Action[AnyContent] = securedAction.async {
     orderRepository.get(id).map {
       case Some(product) => Ok(Json.toJson(product))
       case None => NotFound("{\"error\":\"Order not found\"}")
     }
   }
 
-  def getAllOrders: Action[AnyContent] = Action.async {
+  def getAllOrders: Action[AnyContent] = securedAction.async {
     orderRepository.getAll.map(orders => Ok(Json.toJson(orders)))
   }
 
-  def modifyOrder(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyOrder(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyOrderForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -80,7 +80,7 @@ class OrdersController @Inject()(orderRepository: OrderRepository,
     )
   }
 
-  def removeOrder(id: Long): Action[AnyContent] = Action.async {
+  def removeOrder(id: Long): Action[AnyContent] = securedAction.async {
     orderRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

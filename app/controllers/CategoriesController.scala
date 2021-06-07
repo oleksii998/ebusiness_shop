@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton
-class CategoriesController @Inject()(categoryRepository: CategoryRepository, cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+class CategoriesController @Inject()(categoryRepository: CategoryRepository, scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createCategoryForm: Form[CreateCategoryForm] = Form {
     mapping(
@@ -27,7 +27,7 @@ class CategoriesController @Inject()(categoryRepository: CategoryRepository, cc:
     )(ModifyCategoryForm.apply)(ModifyCategoryForm.unapply)
   }
 
-  def addCategory(): Action[AnyContent] = Action.async { implicit request =>
+  def addCategory(): Action[AnyContent] = securedAction.async { implicit request =>
     createCategoryForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -53,7 +53,7 @@ class CategoriesController @Inject()(categoryRepository: CategoryRepository, cc:
     categoryRepository.getAll.map(products => Ok(Json.toJson(products)))
   }
 
-  def modifyCategory(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyCategory(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyCategoryForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -68,7 +68,7 @@ class CategoriesController @Inject()(categoryRepository: CategoryRepository, cc:
     )
   }
 
-  def removeCategory(id: Long): Action[AnyContent] = Action.async {
+  def removeCategory(id: Long): Action[AnyContent] = securedAction.async {
     categoryRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

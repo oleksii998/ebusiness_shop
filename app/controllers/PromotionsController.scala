@@ -16,7 +16,7 @@ import scala.util.{Failure, Success}
 @Singleton
 class PromotionsController @Inject()(promotionRepository: PromotionRepository,
                                      productRepository: ProductRepository,
-                                     cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                     scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createPromotionForm: Form[CreatePromotionForm] = Form {
     mapping(
@@ -38,7 +38,7 @@ class PromotionsController @Inject()(promotionRepository: PromotionRepository,
     )(ModifyPromotionForm.apply)(ModifyPromotionForm.unapply)
   }
 
-  def addPromotion(): Action[AnyContent] = Action.async { implicit request =>
+  def addPromotion(): Action[AnyContent] = securedAction.async { implicit request =>
     createPromotionForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -64,7 +64,7 @@ class PromotionsController @Inject()(promotionRepository: PromotionRepository,
     promotionRepository.getAll.map(promotions => Ok(Json.toJson(promotions)))
   }
 
-  def modifyPromotion(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyPromotion(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyPromotionForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -79,7 +79,7 @@ class PromotionsController @Inject()(promotionRepository: PromotionRepository,
     )
   }
 
-  def removePromotion(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def removePromotion(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     promotionRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

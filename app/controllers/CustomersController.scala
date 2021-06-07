@@ -16,8 +16,7 @@ class CustomersController @Inject()(customerRepository: CustomerRepository,
                                     bonusCardRepository: BonusCardRepository,
                                     orderRepository: OrderRepository,
                                     transactionRepository: TransactionRepository,
-                                    cc: MessagesControllerComponents)
-                                   (implicit ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                    scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createCustomerForm: Form[CreateCustomerForm] = Form {
     mapping(
@@ -52,34 +51,34 @@ class CustomersController @Inject()(customerRepository: CustomerRepository,
     )
   }
 
-  def getCustomer(id: Long): Action[AnyContent] = Action.async {
+  def getCustomer(id: Long): Action[AnyContent] = securedAction.async {
     customerRepository.get(id).map {
       case Some(customer) => Ok(Json.toJson(customer))
       case None => NotFound("{\"message\":\"Customer not found\"}")
     }
   }
 
-  def getCustomerCart(id: Long): Action[AnyContent] = Action.async {
+  def getCustomerCart(id: Long): Action[AnyContent] = securedAction.async {
     cartRepository.getAllForCustomer(id).map(carts => Ok(Json.toJson(carts)))
   }
 
-  def getCustomerBonusCards(id: Long): Action[AnyContent] = Action.async {
+  def getCustomerBonusCards(id: Long): Action[AnyContent] = securedAction.async {
     bonusCardRepository.getAllForCustomer(id).map(bonusCards => Ok(Json.toJson(bonusCards)))
   }
 
-  def getCustomerOrders(id: Long): Action[AnyContent] = Action.async {
+  def getCustomerOrders(id: Long): Action[AnyContent] = securedAction.async {
     orderRepository.getAllForCustomer(id).map(orders => Ok(Json.toJson(orders)))
   }
 
-  def getCustomerTransactions(id: Long): Action[AnyContent] = Action.async {
+  def getCustomerTransactions(id: Long): Action[AnyContent] = securedAction.async {
     transactionRepository.getAllForCustomer(id).map(transactions => Ok(Json.toJson(transactions)))
   }
 
-  def getAllCustomers: Action[AnyContent] = Action.async {
+  def getAllCustomers: Action[AnyContent] = securedAction.async {
     customerRepository.getAll.map(customers => Ok(Json.toJson(customers)))
   }
 
-  def modifyCustomer(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyCustomer(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyCustomerForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -94,7 +93,7 @@ class CustomersController @Inject()(customerRepository: CustomerRepository,
     )
   }
 
-  def removeCustomer(id: Long): Action[AnyContent] = Action.async {
+  def removeCustomer(id: Long): Action[AnyContent] = securedAction.async {
     customerRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

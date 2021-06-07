@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 @Singleton
 class BonusCardsController @Inject()(bonusCardRepository: BonusCardRepository,
                                      customerRepository: CustomerRepository,
-                                     cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                     scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
   val createBonusCardForm: Form[CreateBonusCardForm] = Form {
     mapping(
       "customerId" -> longNumber,
@@ -35,7 +35,7 @@ class BonusCardsController @Inject()(bonusCardRepository: BonusCardRepository,
     )(ModifyBonusCardForm.apply)(ModifyBonusCardForm.unapply)
   }
 
-  def addBonusCard(): Action[AnyContent] = Action.async { implicit request =>
+  def addBonusCard(): Action[AnyContent] = securedAction.async { implicit request =>
     createBonusCardForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -50,18 +50,18 @@ class BonusCardsController @Inject()(bonusCardRepository: BonusCardRepository,
     )
   }
 
-  def getBonusCard(id: Long): Action[AnyContent] = Action.async {
+  def getBonusCard(id: Long): Action[AnyContent] = securedAction.async {
     bonusCardRepository.get(id).map {
       case Some(product) => Ok(Json.toJson(product))
       case None => NotFound("{\"error\":\"Bonus card not found\"}")
     }
   }
 
-  def getAllBonusCard: Action[AnyContent] = Action.async {
+  def getAllBonusCard: Action[AnyContent] = securedAction.async {
     bonusCardRepository.getAll.map(products => Ok(Json.toJson(products)))
   }
 
-  def modifyBonusCard(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyBonusCard(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyBonusCardForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -76,7 +76,7 @@ class BonusCardsController @Inject()(bonusCardRepository: BonusCardRepository,
     )
   }
 
-  def removeBonusCard(id: Long): Action[AnyContent] = Action.async {
+  def removeBonusCard(id: Long): Action[AnyContent] = securedAction.async {
     bonusCardRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

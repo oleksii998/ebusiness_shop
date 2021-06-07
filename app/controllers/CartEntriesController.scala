@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
 class CartEntriesController @Inject()(cartRepository: CartRepository,
                                       customerRepository: CustomerRepository,
                                       productRepository: ProductRepository,
-                                      cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                      scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createCartForm: Form[CreateCartEntryForm] = Form {
     mapping(
@@ -31,7 +31,7 @@ class CartEntriesController @Inject()(cartRepository: CartRepository,
     )(ModifyCartEntryForm.apply)(ModifyCartEntryForm.unapply)
   }
 
-  def addCartEntry(): Action[AnyContent] = Action.async { implicit request =>
+  def addCartEntry(): Action[AnyContent] = securedAction.async { implicit request =>
     createCartForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -46,18 +46,18 @@ class CartEntriesController @Inject()(cartRepository: CartRepository,
     )
   }
 
-  def getAllCartEntries: Action[AnyContent] = Action.async { implicit request =>
+  def getAllCartEntries: Action[AnyContent] = securedAction.async { implicit request =>
     cartRepository.getAll.map(cart => Ok(Json.toJson(cart)))
   }
 
-  def getCartEntry(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def getCartEntry(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     cartRepository.get(id).map {
       case Some(cart) => Ok(Json.toJson(cart))
       case None => NotFound("{\"message\":\"Cart entry not found\"}")
     }
   }
 
-  def modifyCartEntry(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyCartEntry(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyCartForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -72,7 +72,7 @@ class CartEntriesController @Inject()(cartRepository: CartRepository,
     )
   }
 
-  def removeCartEntry(id: Long): Action[AnyContent] = Action.async {
+  def removeCartEntry(id: Long): Action[AnyContent] = securedAction.async {
     cartRepository.remove(id).map {
       case Success(_) => Ok("{\"result\":\"deleted\"}")
       case Failure(exception) => BadRequest(exception.getMessage)

@@ -18,7 +18,8 @@ create table if not exists Promotions
     "discount"    double  not null,
     "type"        varchar not null,
     "active"      bool    not null,
-    foreign key (product_id) references Products(id)
+    foreign key (product_id) references Products(id),
+    constraint unique_product_id unique ("product_id")
 );
 
 create table if not exists Vouchers
@@ -69,6 +70,40 @@ create table if not exists Users
     "firstName"   integer not null,
     "lastName"    integer not null,
     "active"      bool    not null
+);
+
+create table if not exists UserLogs
+(
+    "id"          integer not null primary key autoincrement,
+    "email"       varchar not null,
+    "providerId"  varchar,
+    "providerKey" varchar
+);
+
+create table if not exists AuthToken
+(
+    "id"          integer not null primary key autoincrement,
+    "userId"      integer not null
+);
+
+create table if not exists "passwordInfo"
+(
+    "id"          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "providerId"  VARCHAR NOT NULL,
+    "providerKey" VARCHAR NOT NULL,
+    "hasher"      VARCHAR NOT NULL,
+    "password"    VARCHAR NOT NULL,
+    "salt"        VARCHAR
+);
+
+create table if not exists "OAuthInfo"
+(
+    "id"          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "providerId"  VARCHAR NOT NULL,
+    "providerKey" VARCHAR NOT NULL,
+    "accessToken" VARCHAR NOT NULL,
+    "tokenType"   VARCHAR,
+    "expiresIn"   INTEGER
 );
 
 create table if not exists Carts

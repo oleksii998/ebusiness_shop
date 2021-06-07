@@ -12,7 +12,7 @@ import scala.util.{Failure, Success}
 
 @Singleton
 class UsersController @Inject()(userRepository: UserRepository,
-                                cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+                                scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
   val createUserForm: Form[CreateUserForm] = Form {
     mapping(
@@ -47,18 +47,18 @@ class UsersController @Inject()(userRepository: UserRepository,
     )
   }
 
-  def getUser(id: Long): Action[AnyContent] = Action.async {
+  def getUser(id: Long): Action[AnyContent] = securedAction.async {
     userRepository.get(id).map {
       case Some(user) => Ok(Json.toJson(user))
       case None => NotFound("{\"message\": \"User not found\"}")
     }
   }
 
-  def getAllUsers: Action[AnyContent] = Action.async {
+  def getAllUsers: Action[AnyContent] = securedAction.async {
     userRepository.getAll.map(users => Ok(Json.toJson(users)))
   }
 
-  def modifyUser(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyUser(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyUserForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -73,7 +73,7 @@ class UsersController @Inject()(userRepository: UserRepository,
     )
   }
 
-  def removeUser(id: Long): Action[AnyContent] = Action.async {
+  def removeUser(id: Long): Action[AnyContent] = securedAction.async {
     userRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")

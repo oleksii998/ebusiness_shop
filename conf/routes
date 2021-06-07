@@ -154,5 +154,8 @@ POST          /transactions/add                      controllers.TransactionsCon
 POST          /transactions/modify/:id               controllers.TransactionsController.modifyTransaction(id: Long)
 DELETE        /transactions/remove/:id               controllers.TransactionsController.removeTransaction(id: Long)
 
+GET           /authentication/:provider              controllers.AuthenticationController.authenticate(provider: String)
+POST          /authentication/log-out                controllers.AuthenticationController.logOut()
+
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file                          controllers.Assets.versioned(path="/public", file: Asset)

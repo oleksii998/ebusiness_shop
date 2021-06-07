@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton
-class TransactionsController @Inject()(transactionRepository: TransactionRepository, cc: MessagesControllerComponents)(implicit val ec: ExecutionContext) extends MessagesAbstractController(cc) {
+class TransactionsController @Inject()(transactionRepository: TransactionRepository, scc: DefaultSilhouetteControllerComponents)(implicit val ec: ExecutionContext) extends SilhouetteController(scc) {
 
 val createTransactionForm: Form[CreateTransactionForm] = Form {
     mapping(
@@ -27,7 +27,7 @@ val createTransactionForm: Form[CreateTransactionForm] = Form {
     )(ModifyTransactionForm.apply)(ModifyTransactionForm.unapply)
   }
 
-  def addTransaction(): Action[AnyContent] = Action.async { implicit request =>
+  def addTransaction(): Action[AnyContent] = securedAction.async { implicit request =>
     createTransactionForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -43,18 +43,18 @@ val createTransactionForm: Form[CreateTransactionForm] = Form {
     )
   }
 
-  def getTransaction(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def getTransaction(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     transactionRepository.get(id).map {
       case Some(transaction) => Ok(Json.toJson(transaction))
       case None => NotFound("{\"error\":\"Transaction not found\"}")
     }
   }
 
-  def getAllTransactions: Action[AnyContent] = Action.async { implicit request =>
+  def getAllTransactions: Action[AnyContent] = securedAction.async { implicit request =>
     transactionRepository.getAll.map(promotions => Ok(Json.toJson(promotions)))
   }
 
-  def modifyTransaction(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def modifyTransaction(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     modifyTransactionForm.bindFromRequest.fold(
       error => {
         Future.successful(BadRequest(Json.toJson(error.data)))
@@ -69,7 +69,7 @@ val createTransactionForm: Form[CreateTransactionForm] = Form {
     )
   }
 
-  def removeTransaction(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def removeTransaction(id: Long): Action[AnyContent] = securedAction.async { implicit request =>
     transactionRepository.remove(id)
       .flatMap(result => result.map {
         case Success(_) => Ok("{\"result\":\"removed\"}")
